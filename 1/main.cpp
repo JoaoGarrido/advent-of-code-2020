@@ -3,8 +3,8 @@
 #include <vector>
 
 auto sum_2_to_x(std::vector<int> input_vec, int x){
-    for(auto a: input_vec){
-        for(auto b: input_vec){
+    for(const auto& a: input_vec){
+        for(const auto& b: input_vec){
             auto sum = a + b;
             if(sum == x){
                 std::cout << a << " + " << b << " = " << x << std::endl;
@@ -18,9 +18,9 @@ auto sum_2_to_x(std::vector<int> input_vec, int x){
 }
 
 auto sum_3_to_x(std::vector<int> input_vec, int x){
-    for(auto a: input_vec){
-        for(auto b: input_vec){
-            for(auto c: input_vec){
+    for(const auto& a: input_vec){
+        for(const auto& b: input_vec){
+            for(const auto& c: input_vec){
                 auto sum = a + b + c;
                 if(sum == x){
                     std::cout << a << " + " << b << " + " << c << " = " << x << std::endl;
@@ -50,7 +50,7 @@ int main(){
     }
 
     //Print vector
-    for(auto a: input_vec)
+    for(const auto& a: input_vec)
         std::cout << a << std::endl;
 
     auto x = 2020;

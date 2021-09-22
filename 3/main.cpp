@@ -53,7 +53,7 @@ int main(){
     }
 
     uint64_t multiply_tree_counters = 1;
-    for(auto tree_counter: tree_counters_per_slope){
+    for(const auto& tree_counter: tree_counters_per_slope){
         std::cout << tree_counter << std::endl;
         multiply_tree_counters *= tree_counter;
     }

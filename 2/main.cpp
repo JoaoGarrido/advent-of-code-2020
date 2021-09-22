@@ -8,7 +8,7 @@
 class Generic_Password {
     public:
         virtual void read_pw_from_line(std::string line) = 0;
-        virtual bool is_valid() = 0;
+        virtual bool is_valid() const = 0;
     protected:
         std::string password;
         char policy_char;
@@ -22,7 +22,7 @@ class Password_min_max_policy: public Generic_Password {
             iss >> min >> _ >> max >> policy_char >> _ >> password;
             //std::cout << min << "-" << max << " " << policy_char << ": " << password << std::endl; 
         }
-        bool is_valid(){
+        bool is_valid() const{
             uint32_t char_count = 0;
             for(char a: password){
                 if(a == policy_char)
@@ -46,7 +46,7 @@ class Password_index_policy: public Generic_Password {
             char _;
             iss >> index_1 >> _ >> index_2 >> policy_char >> _ >> password;
         }
-        bool is_valid(){
+        bool is_valid() const{
             uint8_t valid_at_index = (password[index_1-1] == policy_char) + (password[index_2-1] == policy_char);
             if(valid_at_index == 1) return true;
             else return false;
@@ -69,7 +69,7 @@ template<typename T> std::vector<T> read_password_from_file(std::ifstream& input
 
 template <typename T> uint32_t count_valid_pw(std::vector<T> password_vec){
     uint32_t valid_pw_count = 0;
-    for(T pw: password_vec){
+    for(const T& pw: password_vec){
         if(pw.is_valid())
             valid_pw_count++;
     }
