@@ -3,7 +3,6 @@
 #include <fstream>
 #include <iostream>
 #include <set>
-#include <algorithm>
 
 uint32_t select_upper_half(uint32_t min, uint32_t max){
     return (min + max + 1)/2;
