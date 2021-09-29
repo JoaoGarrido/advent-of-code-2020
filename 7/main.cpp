@@ -6,11 +6,27 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <algorithm> 
 
 using contained_bag_list_t = std::unordered_map<std::string, size_t>;
 using bag_list_t = std::unordered_map<std::string, contained_bag_list_t>;
 
-size_t number_of_bag_colors_that_contain_X(const std::string searching_bag, bag_list_t umm_bags){
+size_t number_of_bags_contained_by_X(const std::string searching_bag, const bag_list_t umm_bags){
+    size_t count = 0;
+    auto searching_el = umm_bags.find(searching_bag);
+    if(searching_el == umm_bags.end()){
+        std::cout << "Searching bag not found" << std::endl;
+        return 0;
+    }
+    auto bag_list = searching_el->second;
+    
+    for(const auto& bag : bag_list){
+        count += bag.second + bag.second * number_of_bags_contained_by_X(bag.first, umm_bags);
+    }
+    return count;
+}
+
+size_t number_of_bag_colors_that_contain_X(const std::string searching_bag, const bag_list_t umm_bags){
     std::unordered_set<std::string> bags_that_contain_shiny;
     bags_that_contain_shiny.insert(searching_bag);
     std::queue<std::string> queue_of_bags_that_contain_searching_bag;
@@ -78,5 +94,6 @@ bag_list_t read_from_file(const char* filename){
 
 int main(){
     auto bag_list = read_from_file("input"); //Read from file
-    std::cout << number_of_bag_colors_that_contain_X(std::string("shiny gold"), bag_list) << std::endl;
+    std::cout << number_of_bag_colors_that_contain_X(std::string("shiny gold"), bag_list) << " different bag colors contain a " << "shiny gold" << std::endl;
+    std::cout << number_of_bags_contained_by_X(std::string("shiny gold"), bag_list) << " different bags inside " << "shiny gold" << std::endl;
 }
