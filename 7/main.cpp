@@ -31,9 +31,9 @@ size_t number_of_bag_colors_that_contain_X(const std::string searching_bag, bag_
 
 //return true if contains number and writes the number in addres of pnumber
 //return false if doesn't contain number
-bool convert_string_to_size_t(std::string str, size_t *pnumber){
-    if(str.find_first_not_of("0123456789") != std::string::npos){
-        *pnumber = std::stoul(str);
+bool convert_string_to_size_t(std::string str, size_t &pnumber){
+    if(std::all_of(str.begin(), str.end(), ::isdigit)){
+        pnumber = std::stoul(str);
         return true;
     }
     return false;
@@ -56,22 +56,21 @@ bag_list_t read_from_file(const char* filename){
         line_stream.str(line);
         line_stream >> aux_1 >> aux_2;
         auto main_bag_name = aux_1 + " " + aux_2;
-        std::cout << main_bag_name << std::endl;
+        //std::cout << main_bag_name << std::endl;
         
         contained_bag_list_t contained_bag_list;
         line_stream >> _thrash >> _thrash; //skip bag|bags and contain
         while(line_stream >> aux_1 >> aux_2 >> aux_3 >> _thrash){ //skip bag,|bags,
-            std::cout << "Number: " << aux_1 << " | Bag name: " << aux_2 << " " << aux_3 << std::endl;
+            //std::cout << "Number: " << aux_1 << " | Bag name: " << aux_2 << " " << aux_3 << std::endl;
             size_t bag_number = 0;
-            if(convert_string_to_size_t(aux_1, &bag_number)) break;
+            if(!convert_string_to_size_t(aux_1, bag_number)) break;
             auto bag_name = aux_2 + " " + aux_3;
             std::pair<std::string, size_t> el(bag_name, bag_number);
             contained_bag_list.insert(el);
-
         }
         std::pair<std::string, contained_bag_list_t> el(main_bag_name, contained_bag_list);
         bag_list.insert(el);
-        std::cout << "NEXT BAG" << std::endl << std::endl;
+        //std::cout << "NEXT BAG" << std::endl << std::endl;
     }
     return bag_list;
 }
