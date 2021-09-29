@@ -1,5 +1,6 @@
 #include <unordered_map>
 #include <unordered_set>
+#include <queue>
 #include <memory>
 #include <iostream>
 #include <fstream>
@@ -9,36 +10,23 @@
 using contained_bag_list_t = std::unordered_map<std::string, size_t>;
 using bag_list_t = std::unordered_map<std::string, contained_bag_list_t>;
 
-bool bag_contains_X(bag_list_t umm_bags, bag_list_t::iterator curr_bag, const std::string searching_bag){
-    static std::unordered_set<std::string> bags_that_contain_shiny;
-    bags_that_contain_shiny.insert(searching_bag);
-    
-    auto bag_name = curr_bag->first;
-    auto bag_list = curr_bag->second;
-
-    if(bags_that_contain_shiny.find(bag_name) != bags_that_contain_shiny.end()) return true; //if already inside list contains shiny
-
-    if(bag_list.empty()) return false;      //if it doesn't contain any bags, can't contain shiny
-    
-    for(const auto& bag: bag_list){
-        if(bags_that_contain_shiny.find(bag.first) != bags_that_contain_shiny.end()){
-            bags_that_contain_shiny.insert(bag_name);
-            return true;
-        }
-        if(bag_contains_X(umm_bags, umm_bags.find(bag.first), searching_bag)){
-                bags_that_contain_shiny.insert(bag_name);
-                return true;
-        }
-    }
-    return false;
-}
-
 size_t number_of_bag_colors_that_contain_X(const std::string searching_bag, bag_list_t umm_bags){
-    size_t bag_counter = 0;
-    for (auto bag=umm_bags.begin(); bag!=umm_bags.end(); ++bag){
-         if(bag_contains_X(umm_bags, bag, searching_bag)) bag_counter++;
+    std::unordered_set<std::string> bags_that_contain_shiny;
+    bags_that_contain_shiny.insert(searching_bag);
+    std::queue<std::string> queue_of_bags_that_contain_searching_bag;
+    queue_of_bags_that_contain_searching_bag.push(searching_bag);
+    while(!queue_of_bags_that_contain_searching_bag.empty()){
+        auto curr_searching_bag = queue_of_bags_that_contain_searching_bag.front();
+        for(const auto & bag: umm_bags){
+            auto contained_bags = bag.second; 
+            if(contained_bags.find(curr_searching_bag) != contained_bags.end()){
+                bags_that_contain_shiny.insert(bag.first);
+                queue_of_bags_that_contain_searching_bag.push(bag.first);
+            }
+        }
+        queue_of_bags_that_contain_searching_bag.pop();
     }
-    return bag_counter-1; //shiny bag doesn't contain itself
+    return bags_that_contain_shiny.size()-1; //shiny bag doesn't contain itself
 }
 
 //return true if contains number and writes the number in addres of pnumber
