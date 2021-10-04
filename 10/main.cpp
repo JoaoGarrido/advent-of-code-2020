@@ -12,7 +12,8 @@ void find_one_and_three_diffs(const std::set<size_t>& data, size_t& n_1_diff, si
 
 std::set<size_t> read_from_file(const char* filename){
     std::set<size_t> input_set;
-    
+    input_set.insert(0);
+
     std::ifstream input_file(filename);
     if(!input_file){
         std::cerr << "Failed to open file." << std::endl;
@@ -23,6 +24,7 @@ std::set<size_t> read_from_file(const char* filename){
     while (std::getline(input_file, line)) {
         input_set.insert(std::stoul(line));
     }
+    input_set.insert(*(input_set.rbegin())+3);
 
     return input_set;
 }
