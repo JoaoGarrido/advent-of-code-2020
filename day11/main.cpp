@@ -5,54 +5,61 @@
 
 enum SeatState {Floor, Empty, Occupied};
 
-using seating_system_t = std::vector<std::vector<SeatState> >;
-
-//std::array<SeatState, 8> adjacentSeats
+//std::array<SeatPlace, 8> adjacentSeats
 // 0 1 2
 // 3 * 4
 // 5 6 7
+enum SeatOrientation {TopLeft = 0, Top, TopRight, Left, Right, BotLeft, Bot, BotRight};
 
-SeatState seatNextIter(SeatState currentSeat, std::array<SeatState, 8> adjacentSeats){
+struct SeatPlace {
+    size_t row;
+    size_t col;
+    SeatState state;
+};
+
+using seating_system_t = std::vector<std::vector<SeatState> >;
+
+SeatState seatNextIter(SeatState currentSeat, std::array<SeatPlace, 8> adjacentSeats, size_t leaveRule){
     size_t seat_counter = 0;
     for(const auto& adjSeat: adjacentSeats){
-        if(adjSeat == Occupied) seat_counter++;
+        if(adjSeat.state == Occupied) seat_counter++;
     }
     if(currentSeat == Empty && seat_counter == 0)
         return Occupied;
-    else if(currentSeat == Occupied && seat_counter >= 4)
+    else if(currentSeat == Occupied && seat_counter >= leaveRule)
         return Empty;
     else
         return currentSeat;    
 }
 
-std::array<SeatState, 8> constructAdjSeats(const seating_system_t& seatingSystem, size_t row, size_t col){
-    std::array<SeatState, 8> adjSeats;
-    for(auto& seat: adjSeats) seat = Empty;
+std::array<SeatPlace, 8> constructAdjSeats(const seating_system_t& seatingSystem, size_t row, size_t col){
+    std::array<SeatPlace, 8> adjSeats;
+    for(auto& seat: adjSeats) seat.state = Empty;
     size_t max_col = seatingSystem.front().size();
     size_t max_row = seatingSystem.size();
     if(col > 0 && row > 0){
-        adjSeats[0] = seatingSystem[row-1][col-1];
+        adjSeats[TopLeft].state = seatingSystem[row-1][col-1];
     }
     if(row > 0){
-        adjSeats[1] = seatingSystem[row-1][col];
+        adjSeats[Top].state = seatingSystem[row-1][col];
     }
     if(row > 0 && (col+1) < max_col){
-        adjSeats[2] = seatingSystem[row-1][col+1];
+        adjSeats[TopRight].state = seatingSystem[row-1][col+1];
     }
     if(col > 0){
-        adjSeats[3] = seatingSystem[row][col-1];
+        adjSeats[Left].state = seatingSystem[row][col-1];
     }
     if((col+1) < max_col){
-        adjSeats[4] = seatingSystem[row][col+1];
+        adjSeats[Right].state = seatingSystem[row][col+1];
     }
     if(col > 0 && (row+1) < max_row){
-        adjSeats[5] = seatingSystem[row+1][col-1];
+        adjSeats[BotLeft].state = seatingSystem[row+1][col-1];
     }
     if((row+1) < max_row){
-        adjSeats[6] = seatingSystem[row+1][col];
+        adjSeats[Bot].state = seatingSystem[row+1][col];
     }
     if((col+1) < max_col && (row+1) < max_row){
-        adjSeats[7] = seatingSystem[row+1][col+1];
+        adjSeats[BotRight].state = seatingSystem[row+1][col+1];
     }
     return adjSeats;
 }
@@ -63,7 +70,7 @@ seating_system_t seatingSystemNextIter(const seating_system_t& currentSeatingSys
         std::vector<SeatState> nextSeatingSystemRow;
         for(size_t j = 0; j < currentSeatingSystem[i].size(); j++){
             const auto adjSeats = constructAdjSeats(currentSeatingSystem, i, j);
-            SeatState nextSeat = seatNextIter(currentSeatingSystem[i][j], adjSeats);
+            SeatState nextSeat = seatNextIter(currentSeatingSystem[i][j], adjSeats, 4);
             nextSeatingSystemRow.push_back(nextSeat);
         }
         nextSeatingSystem.push_back(nextSeatingSystemRow);
@@ -121,8 +128,6 @@ seating_system_t readFromFile(const char* filename){
 
     return input;  
 }
-
-
 
 int main(){
     auto data = readFromFile("input");
