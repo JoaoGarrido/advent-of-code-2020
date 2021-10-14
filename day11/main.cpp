@@ -9,7 +9,7 @@ enum SeatState {Floor, Empty, Occupied};
 // 0 1 2
 // 3 * 4
 // 5 6 7
-enum SeatOrientation {TopLeft = 0, Top, TopRight, Left, Right, BotLeft, Bot, BotRight};
+enum SeatMapPosition {TopLeft = 0, Top, TopRight, Left, Right, BotLeft, Bot, BotRight};
 
 struct SeatPlace {
     size_t row;
@@ -19,10 +19,10 @@ struct SeatPlace {
 
 using seating_system_t = std::vector<std::vector<SeatState> >;
 
-SeatState seatNextIter(SeatState currentSeat, std::array<SeatPlace, 8> adjacentSeats, size_t leaveRule){
+SeatState seatNextIter(SeatState currentSeat, std::array<SeatState, 8> adjacentSeats, size_t leaveRule){
     size_t seat_counter = 0;
     for(const auto& adjSeat: adjacentSeats){
-        if(adjSeat.state == Occupied) seat_counter++;
+        if(adjSeat == Occupied) seat_counter++;
     }
     if(currentSeat == Empty && seat_counter == 0)
         return Occupied;
@@ -32,45 +32,86 @@ SeatState seatNextIter(SeatState currentSeat, std::array<SeatPlace, 8> adjacentS
         return currentSeat;    
 }
 
-std::array<SeatPlace, 8> constructAdjSeats(const seating_system_t& seatingSystem, size_t row, size_t col){
-    std::array<SeatPlace, 8> adjSeats;
-    for(auto& seat: adjSeats) seat.state = Empty;
-    size_t max_col = seatingSystem.front().size();
-    size_t max_row = seatingSystem.size();
-    if(col > 0 && row > 0){
-        adjSeats[TopLeft].state = seatingSystem[row-1][col-1];
+constexpr void updateIDs(SeatPlace& currentSeat, size_t& row_id, size_t& col_id, size_t& aux, SeatMapPosition& pos){
+    switch (pos){
+    case TopLeft:
+        col_id = currentSeat.col - aux - 1;
+        row_id = currentSeat.row - aux - 1;
+        break;
+    case Top:
+        col_id = currentSeat.col;    
+        row_id = currentSeat.row - aux - 1;
+        break;
+    case TopRight:
+        col_id = currentSeat.col + aux + 1;    
+        row_id = currentSeat.row - aux - 1;
+        break;
+    case Left:
+        col_id = currentSeat.col - aux - 1;
+        row_id = currentSeat.row;
+        break;
+    case Right:
+        col_id = currentSeat.col + aux + 1;
+        row_id = currentSeat.row;
+        break;
+    case BotLeft:
+        col_id = currentSeat.col - aux - 1;
+        row_id = currentSeat.row + aux + 1;
+        break;
+    case Bot:
+        col_id = currentSeat.col;
+        row_id = currentSeat.row + aux + 1;
+        break;
+    case BotRight:
+        col_id = currentSeat.col + aux + 1;
+        row_id = currentSeat.row + aux + 1;
+        break;
     }
-    if(row > 0){
-        adjSeats[Top].state = seatingSystem[row-1][col];
+}
+
+void setAdjSeatPlace(const seating_system_t& seatingSystem, const size_t& max_row, const size_t max_col, SeatState& adjSeat, SeatMapPosition adjSeatPos, SeatPlace current_seat_info, bool visible){
+    size_t aux = 0;
+    size_t row_id, col_id;
+    updateIDs(current_seat_info, row_id, col_id, aux, adjSeatPos);
+    while(row_id >= 0 && row_id < max_row && col_id >= 0 && col_id < max_col){
+        adjSeat = seatingSystem[row_id][col_id];
+        if(adjSeat != Floor)    return;
+        else if(!visible)       return;
+        aux++;
+        updateIDs(current_seat_info, row_id, col_id, aux, adjSeatPos);
     }
-    if(row > 0 && (col+1) < max_col){
-        adjSeats[TopRight].state = seatingSystem[row-1][col+1];
-    }
-    if(col > 0){
-        adjSeats[Left].state = seatingSystem[row][col-1];
-    }
-    if((col+1) < max_col){
-        adjSeats[Right].state = seatingSystem[row][col+1];
-    }
-    if(col > 0 && (row+1) < max_row){
-        adjSeats[BotLeft].state = seatingSystem[row+1][col-1];
-    }
-    if((row+1) < max_row){
-        adjSeats[Bot].state = seatingSystem[row+1][col];
-    }
-    if((col+1) < max_col && (row+1) < max_row){
-        adjSeats[BotRight].state = seatingSystem[row+1][col+1];
-    }
+}
+
+
+std::array<SeatState, 8> constructAdjSeats(const seating_system_t& seatingSystem, size_t row, size_t col, bool visible){
+    std::array<SeatState, 8> adjSeats;
+    for(auto& seat: adjSeats) seat = Empty;
+    const SeatPlace current_seat_info = {.row = row, .col = col};
+    const size_t max_row = seatingSystem.size();
+    const size_t max_col = seatingSystem.front().size();
+
+    setAdjSeatPlace(seatingSystem, max_row, max_col, adjSeats[TopLeft], TopLeft, current_seat_info, visible);
+    setAdjSeatPlace(seatingSystem, max_row, max_col, adjSeats[TopRight], TopRight, current_seat_info, visible);
+    setAdjSeatPlace(seatingSystem, max_row, max_col, adjSeats[Top], Top, current_seat_info, visible);
+    
+    setAdjSeatPlace(seatingSystem, max_row, max_col, adjSeats[Left], Left, current_seat_info, visible);
+    setAdjSeatPlace(seatingSystem, max_row, max_col, adjSeats[Right], Right, current_seat_info, visible);
+    
+    setAdjSeatPlace(seatingSystem, max_row, max_col, adjSeats[BotLeft], BotLeft, current_seat_info, visible);
+    setAdjSeatPlace(seatingSystem, max_row, max_col, adjSeats[BotRight], BotRight, current_seat_info, visible);
+    setAdjSeatPlace(seatingSystem, max_row, max_col, adjSeats[Bot], Bot, current_seat_info, visible);
+
     return adjSeats;
 }
 
-seating_system_t seatingSystemNextIter(const seating_system_t& currentSeatingSystem){
+seating_system_t seatingSystemNextIter(const seating_system_t& currentSeatingSystem, bool visible){
+    size_t seatRule = visible ? 5 : 4;
     seating_system_t nextSeatingSystem;
     for(size_t i = 0; i < currentSeatingSystem.size(); i++){
         std::vector<SeatState> nextSeatingSystemRow;
         for(size_t j = 0; j < currentSeatingSystem[i].size(); j++){
-            const auto adjSeats = constructAdjSeats(currentSeatingSystem, i, j);
-            SeatState nextSeat = seatNextIter(currentSeatingSystem[i][j], adjSeats, 4);
+            const auto adjSeats = constructAdjSeats(currentSeatingSystem, i, j, visible);
+            SeatState nextSeat = seatNextIter(currentSeatingSystem[i][j], adjSeats, seatRule);
             nextSeatingSystemRow.push_back(nextSeat);
         }
         nextSeatingSystem.push_back(nextSeatingSystemRow);
@@ -86,11 +127,11 @@ size_t countOccupied(const seating_system_t seatingSystem){
     return counter;
 }
 
-size_t iterateUntilStable(seating_system_t seatingSystem){
+size_t iterateUntilStable(seating_system_t seatingSystem, bool visible){
     seating_system_t nextSeatingSystem = seatingSystem;
     do{
         seatingSystem = nextSeatingSystem;
-        nextSeatingSystem = seatingSystemNextIter(seatingSystem);
+        nextSeatingSystem = seatingSystemNextIter(seatingSystem, visible);
     }while(seatingSystem != nextSeatingSystem);
     return countOccupied(nextSeatingSystem);
 }
@@ -131,5 +172,6 @@ seating_system_t readFromFile(const char* filename){
 
 int main(){
     auto data = readFromFile("input");
-    std::cout << "When stable number of occupied seats is " << iterateUntilStable(data) << std::endl;;
+    std::cout << "Adj Seats Rule: When stable number of occupied seats is " << iterateUntilStable(data, false) << std::endl;
+    std::cout << "Visible Seats Rule: When stable number of occupied seats is " << iterateUntilStable(data, true) << std::endl;
 }
